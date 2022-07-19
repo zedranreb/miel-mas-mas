@@ -1,0 +1,14 @@
+{
+    "name": "Miel ++",
+    "short_name": "M++",
+    "description": "Permite descargar los archivos dentros de Contenidos mediante un solo click",
+    "version": 0.1,
+    "author": "Juan Ignacio Bernardez",
+    "manifest_version": 3,
+
+    "lang": "es-ES",
+
+    "background":{
+        "service_worker": "indice.js"
+    }
+}
