@@ -11,7 +11,8 @@
         "https://miel.unlam.edu.ar/contenido/archivos/*"
       ],
       "js": [
-        "content.js"
+        "content.js",
+        "libs/jszip.min.js"
       ],
       "run_at": "document_idle"
     }

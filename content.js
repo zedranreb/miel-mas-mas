@@ -8,7 +8,7 @@ function agregarBotonDescargar(modulo) {
   // 1. Crear el botón
   const boton = document.createElement('button');
   boton.textContent = 'Descargar';
-  boton.className = 'btn-descargar-extension'; // Para darle estilo en styles.css
+  boton.className = 'btn-descargar-extension';
 
   // 2. Manejar el evento de clic
   boton.addEventListener('click', (evento) => {
@@ -26,20 +26,26 @@ function agregarBotonDescargar(modulo) {
 // Lógica principal de descarga
 function manejarDescarga(modulo) {
   console.log('Iniciando descarga para el módulo:', modulo);
+ 
+  const moduloAcordeon = modulo.nextElementSibling;
+  const elementosADescargar = []
+  
+  const tablasArchivo = moduloAcordeon.querySelectorAll('tbody');
+  tablasArchivo.forEach((tabla, indiceTabla) => {
+    elementoAnterior = tabla.previousElementSibling;
+    nombreCarpeta = "Base"
+    
+    if(elementoAnterior.matches('thead')) {
+      nombreCarpeta = elementoAnterior.querySelector('th[colspan="2"]').textContent.trim();
+    }
 
-  // EJEMPLO: Extraer información del módulo para descargar
-  // Modifica esto según la estructura interna de tu HTML:
-  const enlaceDescarga = modulo.querySelector('a')?.href;
-  const tituloModulo = modulo.querySelector('h2, h3, .titulo')?.innerText.trim() || 'modulo';
+    tabla.querySelectorAll('tr').forEach(fila => {
+        elementosADescargar.push([nombreCarpeta, fila.cells[1].textContent.trim(), fila.cells[5].querySelector('a')?.href])
+    })
+  });
 
-  if (enlaceDescarga) {
-    // Si hay una URL de archivo directa
-    descargarArchivoDirecto(enlaceDescarga, `${tituloModulo}.pdf`);
-  } else {
-    // Si necesitas procesar texto o datos internos del div
-    const contenido = modulo.innerText;
-    descargarTextoComoArchivo(contenido, `${tituloModulo}.txt`);
-  }
+  console.log(elementosADescargar)
+
 }
 
 // Helper: Descargar un archivo desde una URL
