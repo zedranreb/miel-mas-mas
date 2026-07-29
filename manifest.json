@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Boton de Descarga Personalizado",
+  "name": "Miel++",
   "version": "1.0",
-  "description": "Agrega un boton de descarga a cada modulo desplegable de la pagina.",
-  "permissions": [],
+  "description": "Agrega un boton de descarga a cada modulo desplegable de la pagina de contenidos de una materia",
+  "permissions": [],  
   "content_scripts": [
     {
       "matches": [
@@ -11,8 +11,8 @@
         "https://miel.unlam.edu.ar/contenido/archivos/*"
       ],
       "js": [
-        "content.js",
-        "libs/jszip.min.js"
+        "libs/zip.min.js",
+        "content.js"
       ],
       "run_at": "document_idle"
     }

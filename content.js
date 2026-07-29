@@ -1,3 +1,9 @@
+zip.configure({
+  useCompressionStream: false,
+  useWebWorkers: false,
+  transferStreams: false
+});
+
 // Función para crear e inyectar el botón en un módulo específico
 function agregarBotonDescargar(modulo) {
   // Evitamos insertar duplicados si el script corre varias veces
@@ -16,7 +22,7 @@ function agregarBotonDescargar(modulo) {
     evento.stopPropagation();
     
     // Ejecutar lógica de descarga
-    manejarDescarga(modulo);
+    obtenerArchivos(modulo);
   });
 
   // 3. Inyectar el botón dentro del div .desplegarModulo
@@ -24,7 +30,7 @@ function agregarBotonDescargar(modulo) {
 }
 
 // Lógica principal de descarga
-function manejarDescarga(modulo) {
+function obtenerArchivos(modulo) {
   console.log('Iniciando descarga para el módulo:', modulo);
  
   const moduloAcordeon = modulo.nextElementSibling;
@@ -45,25 +51,82 @@ function manejarDescarga(modulo) {
   });
 
   console.log(elementosADescargar)
+  generarZIP(elementosADescargar)
 
+}
+
+async function generarZIP(listaDeElementos) {
+  
+  // const zip = new JSZip()
+  const zipFileWriter = new zip.BlobWriter("application/zip");
+  const zipFile = new zip.ZipWriter(zipFileWriter);
+
+  const descargas = listaDeElementos.map(async (elem) => {
+    console.log(elem)
+    const url = elem[2];
+    const carpeta = elem[0];
+    const nombre = elem[1];
+    const ruta =  nombre
+    try {
+
+      const respuesta = await fetch(url);
+      
+
+      if(!respuesta.ok) {
+        throw new Error('Error en HTTP: ' + respuesta.status)
+      }
+      console.log("[INFO]: Respuesta: ", respuesta)
+      repuestaBlob = await respuesta.blob();
+      const blobReader = new zip.BlobReader(repuestaBlob);
+
+      await zipFile.add("programa.pdf", blobReader);
+      console.log('[INFO]: Archivo ' + ruta + ' incorporado al zip correctamente', repuestaBlob)
+      
+    } catch (e) {
+      console.error("[ERR-Mensaje]: " + e.message )
+      console.error("[ERR-Causa]: " + e.cause )
+
+    }
+
+  })
+
+  await Promise.all(descargas);
+
+  await zipFile.close();
+  const zipFileBlob = await zipFileWriter.getData();
+  // const contenidoZip = await zip.generateAsync({ type: "blob" });
+
+  // descargarArchivoDirecto(blob, obtenerFechaFormateadaManual())
+  // const blobZip = new Blob([contenidoZip], { type: "application/zip" })
+  const enlace = document.createElement('a');
+  // enlace.href = URL.createObjectURL(blobZip);
+  enlace.href = URL.createObjectURL(zipFileBlob);
+  enlace.download = obtenerFechaFormateadaManual() + '-base.zip';
+  document.body.appendChild(enlace);
+  enlace.click();
+  enlace.remove();
+  URL.revokeObjectURL(enlace.href);
 }
 
 // Helper: Descargar un archivo desde una URL
 function descargarArchivoDirecto(url, nombreArchivo) {
   const a = document.createElement('a');
-  a.href = url;
-  a.download = nombreArchivo;
+  a.href = url; 
+  a.download = nombreArchivo + 'base';
   document.body.appendChild(a);
   a.click();
   a.remove();
 }
 
-// Helper: Crear y descargar un blob de texto si no hay un enlace directo
-function descargarTextoComoArchivo(texto, nombreArchivo) {
-  const blob = new Blob([texto], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  descargarArchivoDirecto(url, nombreArchivo);
-  URL.revokeObjectURL(url);
+function obtenerFechaFormateadaManual(date = new Date()) {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0'); // Los meses van de 0 a 11
+  const dd = String(date.getDate()).padStart(2, '0');
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mi = String(date.getMinutes()).padStart(2, '0');
+  const ss = String(date.getSeconds()).padStart(2, '0');
+
+  return `${yyyy}${mm}${dd}${hh}${mi}${ss}`;
 }
 
 // --- INICIALIZACIÓN ---
