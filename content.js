@@ -56,8 +56,38 @@ function obtenerArchivos(modulo) {
 }
 
 async function generarZIP(listaDeElementos) {
-  
-  // const zip = new JSZip()
+ 
+  await browser.runtime.sendMessage({
+  tipo: "GENERAR_ZIP",
+  payload: listaDeElementos,
+  filename: "archivos.zip"
+}).then((respuesta) => {
+  if (!respuesta || !respuesta.ok) {
+    console.error("Error generando ZIP:", respuesta && respuesta.error);
+    return;
+  }
+
+  // Firefox permite recibir Blob por mensaje (structured clone)
+  const blob = respuesta.zip;
+  if (!(blob instanceof Blob)) {
+    console.error("Respuesta no contiene Blob");
+    return;
+  }
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = respuesta.filename || "archivos.zip";
+  // Forzar click en el DOM de la página
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}).catch(err => {
+  console.error("sendMessage error:", err);
+});
+
+/*   // const zip = new JSZip()
   const zipFileWriter = new zip.BlobWriter("application/zip");
   const zipFile = new zip.ZipWriter(zipFileWriter);
 
@@ -105,7 +135,7 @@ async function generarZIP(listaDeElementos) {
   document.body.appendChild(enlace);
   enlace.click();
   enlace.remove();
-  URL.revokeObjectURL(enlace.href);
+  URL.revokeObjectURL(enlace.href); */
 }
 
 // Helper: Descargar un archivo desde una URL
