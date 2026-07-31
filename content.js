@@ -60,7 +60,7 @@ async function generarZIP(listaDeElementos) {
   await browser.runtime.sendMessage({
   tipo: "GENERAR_ZIP",
   payload: listaDeElementos,
-  filename: "archivos.zip"
+  filename: "Miel_files.zip"
 }).then((respuesta) => {
   if (!respuesta || !respuesta.ok) {
     console.error("Error generando ZIP:", respuesta && respuesta.error);

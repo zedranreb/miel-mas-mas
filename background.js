@@ -1,4 +1,6 @@
 import "./libs/zip.min.js";
+import { determinarTipoArchivo, limpiarNombre, determinarDuplicados } from "./helpers.js"
+
 console.log("Background script cargado e inicializado en Firefox. I");
 /* importScripts("libs/zip.min.js"); */
 zip.configure({
@@ -14,7 +16,7 @@ async function prepararZip(request, sender, sendResponse) {
   if (mensaje.tipo !== "GENERAR_ZIP") return;
 
   // Comensar con la incorporacion de archivos a zip
-  const lista = mensaje.payload;
+  const lista = await determinarDuplicados(mensaje.payload);
   const zipFilename = mensaje.filename || 'archivos.zip';
 
   try {
@@ -22,8 +24,8 @@ async function prepararZip(request, sender, sendResponse) {
       const zipFile = new zip.ZipWriter(zipFileWriter);
 
       const tareas = lista.map(async (elem) => {
-        const carpeta = elem[0];
-        const nombre = elem[1];
+        const carpeta = limpiarNombre(elem[0]);
+        const nombre = limpiarNombre(elem[1]);
         const url = elem[2];
 
         const resp = await fetch(url);
@@ -31,8 +33,14 @@ async function prepararZip(request, sender, sendResponse) {
 
         const blob = await resp.blob();
         const reader = new zip.BlobReader(blob);
+        const extension = determinarTipoArchivo(blob.type);
 
-        await zipFile.add('reporte.pdf', reader);
+        if(!extension.ok) {
+          throw Error("Archivo con extension no soportada");
+        }
+        console.log(carpeta + '/' + nombre + extension.ext);
+
+        await zipFile.add(carpeta + '/' + nombre + extension.ext, reader);
       });
 
       await Promise.all(tareas);
@@ -41,8 +49,9 @@ async function prepararZip(request, sender, sendResponse) {
       const respuesta = {ok: true, zip: zipBlob, filename: zipFilename};
       return respuesta;
 
-    } catch (e) {
-      const respuesta = {ok: false, zip: e.message, filename: null};
+    } catch (err) {
+      console.error("Falló la carga del zip: ", err.message);
+      const respuesta = {ok: false, zip: err.message, filename: null};
       return respuesta;
     }
 
