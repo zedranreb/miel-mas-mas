@@ -87,57 +87,6 @@ async function generarZIP(listaDeElementos) {
   console.error("sendMessage error:", err);
 });
 
-/*   // const zip = new JSZip()
-  const zipFileWriter = new zip.BlobWriter("application/zip");
-  const zipFile = new zip.ZipWriter(zipFileWriter);
-
-  const descargas = listaDeElementos.map(async (elem) => {
-    console.log(elem)
-    const url = elem[2];
-    const carpeta = elem[0];
-    const nombre = elem[1];
-    const ruta =  nombre
-    try {
-
-      const respuesta = await fetch(url);
-      
-
-      if(!respuesta.ok) {
-        throw new Error('Error en HTTP: ' + respuesta.status)
-      }
-      console.log("[INFO]: Respuesta: ", respuesta)
-      repuestaBlob = await respuesta.blob();
-      const blobReader = new zip.BlobReader(repuestaBlob);
-
-      await zipFile.add("programa.pdf", blobReader);
-      console.log('[INFO]: Archivo ' + ruta + ' incorporado al zip correctamente', repuestaBlob)
-      
-    } catch (e) {
-      console.error("[ERR-Mensaje]: " + e.message )
-      console.error("[ERR-Causa]: " + e.cause )
-
-    }
-
-  })
-
-  await Promise.all(descargas);
-
-  await zipFile.close();
-  const zipFileBlob = await zipFileWriter.getData();
-  // const contenidoZip = await zip.generateAsync({ type: "blob" });
-
-  // descargarArchivoDirecto(blob, obtenerFechaFormateadaManual())
-  // const blobZip = new Blob([contenidoZip], { type: "application/zip" })
-  const enlace = document.createElement('a');
-  // enlace.href = URL.createObjectURL(blobZip);
-  enlace.href = URL.createObjectURL(zipFileBlob);
-  enlace.download = obtenerFechaFormateadaManual() + '-base.zip';
-  document.body.appendChild(enlace);
-  enlace.click();
-  enlace.remove();
-  URL.revokeObjectURL(enlace.href); */
-}
-
 // Helper: Descargar un archivo desde una URL
 function descargarArchivoDirecto(url, nombreArchivo) {
   const a = document.createElement('a');
