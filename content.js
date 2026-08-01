@@ -13,8 +13,10 @@ function agregarBotonDescargar(modulo) {
 
   // 1. Crear el botón
   const boton = document.createElement('button');
-  boton.textContent = 'Descargar';
-  boton.className = 'btn-descargar-extension';
+  boton.textContent = 'Descargar zip';
+  // boton.className = 'btn-descargar-extension';
+  boton.className = 'btn-descargar-extension w3-btn w3-orange w3-right w3-padding-small';
+  
 
   // 2. Manejar el evento de clic
   boton.addEventListener('click', (evento) => {
@@ -86,6 +88,8 @@ async function generarZIP(listaDeElementos) {
 }).catch(err => {
   console.error("sendMessage error:", err);
 });
+
+}
 
 // Helper: Descargar un archivo desde una URL
 function descargarArchivoDirecto(url, nombreArchivo) {

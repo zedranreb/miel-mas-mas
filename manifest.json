@@ -20,5 +20,8 @@
       ],
       "run_at": "document_idle"
     }
-  ]
+  ],
+  "icons": {
+    "64": "assets/mielpp.png"
+  }
 }
