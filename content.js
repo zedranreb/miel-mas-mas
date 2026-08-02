@@ -13,18 +13,31 @@ function agregarBotonDescargar(modulo) {
 
   // 1. Crear el botón
   const boton = document.createElement('button');
-  boton.textContent = 'Descargar zip';
+  const contenidoBoton = 'Descargar zip';
+  boton.textContent = contenidoBoton;
   // boton.className = 'btn-descargar-extension';
   boton.className = 'btn-descargar-extension w3-btn w3-orange w3-right w3-padding-small';
   
 
   // 2. Manejar el evento de clic
-  boton.addEventListener('click', (evento) => {
+  boton.addEventListener('click', async (evento) => {
     // Evitamos que el clic active eventos del div padre (como desplegar/cerrar el módulo)
     evento.stopPropagation();
-    
+   
     // Ejecutar lógica de descarga
-    obtenerArchivos(modulo);
+    try {
+      
+      activarEsperaBoton(boton, "Descargando...");
+      console.log("Descargando...");
+      const resultado = await obtenerArchivos(modulo)
+      console.log("OK: ",resultado.comment)
+    
+    } catch(error) {
+       console.error("Error en la descarga de los archivos ", error.message);
+    } finally{
+      desactivarEsperaBoton(boton, contenidoBoton);
+    }
+      
   });
 
   // 3. Inyectar el botón dentro del div .desplegarModulo
@@ -52,9 +65,10 @@ function obtenerArchivos(modulo) {
     })
   });
 
-  console.log(elementosADescargar)
-  generarZIP(elementosADescargar)
-
+  console.log(elementosADescargar);
+  return generarZIP(elementosADescargar)
+    .then(() => {return {success: true, comment: "Archivos descargados correctamente"}},
+    (err) => {throw {success: false, comment: err}}) ;
 }
 
 async function generarZIP(listaDeElementos) {
@@ -91,6 +105,16 @@ async function generarZIP(listaDeElementos) {
 
 }
 
+function activarEsperaBoton(boton, textoDeEspera) {
+  boton.disabled = true;
+  boton.textContent = textoDeEspera;
+}
+
+function desactivarEsperaBoton(boton, textoDeEspera) {
+ boton.disabled = false;
+ boton.textContent = textoDeEspera; 
+}
+
 // Helper: Descargar un archivo desde una URL
 function descargarArchivoDirecto(url, nombreArchivo) {
   const a = document.createElement('a');
@@ -99,17 +123,6 @@ function descargarArchivoDirecto(url, nombreArchivo) {
   document.body.appendChild(a);
   a.click();
   a.remove();
-}
-
-function obtenerFechaFormateadaManual(date = new Date()) {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0'); // Los meses van de 0 a 11
-  const dd = String(date.getDate()).padStart(2, '0');
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mi = String(date.getMinutes()).padStart(2, '0');
-  const ss = String(date.getSeconds()).padStart(2, '0');
-
-  return `${yyyy}${mm}${dd}${hh}${mi}${ss}`;
 }
 
 // --- INICIALIZACIÓN ---
