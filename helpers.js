@@ -143,7 +143,7 @@ export function determinarDuplicados(listaDeArchivos) {
         } else {
             conteo.set(nombreArchivo,1);
         }
-        //console.log("detDup: ",elem);
+        
     }
     )
 
