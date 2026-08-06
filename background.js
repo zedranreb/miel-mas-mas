@@ -13,9 +13,9 @@ async function prepararZip(request, sender, sendResponse) {
   const mensaje = request;
   if (mensaje.tipo !== "GENERAR_ZIP") return;
 
-  // Comensar con la incorporacion de archivos a zip
+  // Comenzar con la incorporacion de archivos a zip
   const lista = await determinarDuplicados(mensaje.payload);
-  const zipFilename = mensaje.filename || 'archivos.zip';
+  const zipFilename = limpiarNombre(mensaje.filename) || 'archivos.zip';
 
   try {
       const zipFileWriter = new zip.BlobWriter("application/zip");

@@ -41,6 +41,11 @@ function agregarBotonDescargar(modulo) {
 
 // Lógica principal de descarga
 function obtenerArchivos(modulo) {
+  let nombreMateria = document.querySelector("#botonDropdownCurso")?.ariaLabel;
+  nombreMateria = nombreMateria.substring(0,nombreMateria.indexOf("(")).trim();
+  let nombreModulo = modulo.querySelector("span").textContent;
+  const nombreArchivo = nombreMateria + "--" + nombreModulo;
+  
   const moduloAcordeon = modulo.nextElementSibling;
   const elementosADescargar = []
   
@@ -58,17 +63,18 @@ function obtenerArchivos(modulo) {
     })
   });
 
-  return generarZIP(elementosADescargar)
+
+  return generarZIP(elementosADescargar, nombreArchivo)
     .then(() => {return {success: true, comment: "Archivos descargados correctamente"}},
-    (err) => {throw {success: false, comment: err}}) ;
+    (err) => {throw {success: false, comment: err}}) ; 
 }
 
-async function generarZIP(listaDeElementos) {
+async function generarZIP(listaDeElementos, nombreArchivo) {
  
   await browser.runtime.sendMessage({
   tipo: "GENERAR_ZIP",
   payload: listaDeElementos,
-  filename: "Miel_files.zip"
+  filename: nombreArchivo
 }).then((respuesta) => {
   if (!respuesta || !respuesta.ok) {
     console.error("Error generando ZIP:", respuesta && respuesta.error);

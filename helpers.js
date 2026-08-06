@@ -104,7 +104,12 @@ export function determinarTipoArchivo(type) {
 }
 
 export function limpiarNombre(nombre) {
+    const setCaracteres = ["|", ",", ".",":","\\"]
+    
     if (!nombre){
+        return "_" + obtenerFechaFormateadaManual();
+    }
+    if(nombre.length == 1 && setCaracteres.some(car => nombre.includes(car))){
         return "_" + obtenerFechaFormateadaManual();
     }
 
