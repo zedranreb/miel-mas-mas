@@ -1,23 +1,21 @@
 import "./libs/zip.min.js";
 import { determinarTipoArchivo, limpiarNombre, determinarDuplicados } from "./helpers.js"
 
-console.log("Background script cargado e inicializado en Firefox. I");
-/* importScripts("libs/zip.min.js"); */
 zip.configure({
   useCompressionStream: true,
   useWebWorkers: false,
   transferStreams: false,
   
 });
-console.log("Background script cargado e inicializado en Firefox. Ib");
+
 async function prepararZip(request, sender, sendResponse) {
   // Corroborar que el mensaje sea adecuado
   const mensaje = request;
   if (mensaje.tipo !== "GENERAR_ZIP") return;
 
-  // Comensar con la incorporacion de archivos a zip
+  // Comenzar con la incorporacion de archivos a zip
   const lista = await determinarDuplicados(mensaje.payload);
-  const zipFilename = mensaje.filename || 'archivos.zip';
+  const zipFilename = limpiarNombre(mensaje.filename) || 'archivos.zip';
 
   try {
       const zipFileWriter = new zip.BlobWriter("application/zip");
@@ -58,5 +56,5 @@ async function prepararZip(request, sender, sendResponse) {
     return true;
 
 }
-console.log("Background script cargado e inicializado en Firefox. II");
+
 browser.runtime.onMessage.addListener(prepararZip);

@@ -11,11 +11,9 @@ function agregarBotonDescargar(modulo) {
     return;
   }
 
-  // 1. Crear el botón
   const boton = document.createElement('button');
   const contenidoBoton = 'Descargar zip';
   boton.textContent = contenidoBoton;
-  // boton.className = 'btn-descargar-extension';
   boton.className = 'btn-descargar-extension w3-btn w3-orange w3-right w3-padding-small';
   
 
@@ -28,9 +26,7 @@ function agregarBotonDescargar(modulo) {
     try {
       
       activarEsperaBoton(boton, "Descargando...");
-      console.log("Descargando...");
       const resultado = await obtenerArchivos(modulo)
-      console.log("OK: ",resultado.comment)
     
     } catch(error) {
        console.error("Error en la descarga de los archivos ", error.message);
@@ -40,14 +36,16 @@ function agregarBotonDescargar(modulo) {
       
   });
 
-  // 3. Inyectar el botón dentro del div .desplegarModulo
   modulo.appendChild(boton);
 }
 
 // Lógica principal de descarga
 function obtenerArchivos(modulo) {
-  console.log('Iniciando descarga para el módulo:', modulo);
- 
+  let nombreMateria = document.querySelector("#botonDropdownCurso")?.ariaLabel;
+  nombreMateria = nombreMateria.substring(0,nombreMateria.indexOf("(")).trim();
+  let nombreModulo = modulo.querySelector("span").textContent;
+  const nombreArchivo = nombreMateria + "--" + nombreModulo;
+  
   const moduloAcordeon = modulo.nextElementSibling;
   const elementosADescargar = []
   
@@ -65,18 +63,18 @@ function obtenerArchivos(modulo) {
     })
   });
 
-  console.log(elementosADescargar);
-  return generarZIP(elementosADescargar)
+
+  return generarZIP(elementosADescargar, nombreArchivo)
     .then(() => {return {success: true, comment: "Archivos descargados correctamente"}},
-    (err) => {throw {success: false, comment: err}}) ;
+    (err) => {throw {success: false, comment: err}}) ; 
 }
 
-async function generarZIP(listaDeElementos) {
+async function generarZIP(listaDeElementos, nombreArchivo) {
  
   await browser.runtime.sendMessage({
   tipo: "GENERAR_ZIP",
   payload: listaDeElementos,
-  filename: "Miel_files.zip"
+  filename: nombreArchivo
 }).then((respuesta) => {
   if (!respuesta || !respuesta.ok) {
     console.error("Error generando ZIP:", respuesta && respuesta.error);
@@ -90,15 +88,8 @@ async function generarZIP(listaDeElementos) {
     return;
   }
 
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = respuesta.filename || "archivos.zip";
-  // Forzar click en el DOM de la página
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  descargarArchivoDirecto(blob, respuesta.filename)
+  
 }).catch(err => {
   console.error("sendMessage error:", err);
 });
@@ -116,13 +107,16 @@ function desactivarEsperaBoton(boton, textoDeEspera) {
 }
 
 // Helper: Descargar un archivo desde una URL
-function descargarArchivoDirecto(url, nombreArchivo) {
-  const a = document.createElement('a');
-  a.href = url; 
-  a.download = nombreArchivo + 'base';
+function descargarArchivoDirecto(blob, nombreArchivo) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nombreArchivo || "archivos.zip";
+  // Forzar click en el DOM de la página
   document.body.appendChild(a);
   a.click();
   a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 }
 
 // --- INICIALIZACIÓN ---

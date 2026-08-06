@@ -1,8 +1,15 @@
 # Miel++
 
 ## Descripción
+Una extensión de firefox que permite descargar los diferentes Contenidos de Miel/Miel historico en un solo zip.
 
-Permite descargar con un solo botón de descargas, el contenido de un modulo, a través de un solo zip.
+## Instalación
+a. En el apartado de Realeses, emplear la versión más nueva y descargar el archivo `.xpi`. Solo se instalará.
+b. Descargar el codigo fuente y utilizarlo como "Extensión temporal":
+1. En la url de firefox ingresar `about:debugging`.
+2. En la parte de la izquierda seleccionar "Este Firefox".
+3. Seleccionar la opción "Cargar complemento temporario...".
+4. Seleccionar el archivo `manifest.json`. La extensión estará disponible hasta que se cierre la ventana de Firefox.
 
 
 ## ROADMAP

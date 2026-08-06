@@ -104,7 +104,12 @@ export function determinarTipoArchivo(type) {
 }
 
 export function limpiarNombre(nombre) {
+    const setCaracteres = ["|", ",", ".",":","\\"]
+    
     if (!nombre){
+        return "_" + obtenerFechaFormateadaManual();
+    }
+    if(nombre.length == 1 && setCaracteres.some(car => nombre.includes(car))){
         return "_" + obtenerFechaFormateadaManual();
     }
 
@@ -143,7 +148,7 @@ export function determinarDuplicados(listaDeArchivos) {
         } else {
             conteo.set(nombreArchivo,1);
         }
-        //console.log("detDup: ",elem);
+        
     }
     )
 
