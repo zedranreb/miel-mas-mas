@@ -4,6 +4,32 @@ zip.configure({
   transferStreams: false
 });
 
+function agregarBotonDescargarTodo(div, modulos) {
+  if (div.querySelector('.btn-descargar-todo-extension')) {
+    return;
+  }
+
+  const boton = document.createElement('button');
+  const contenidoBoton = 'Descargar todo en zip';
+  boton.textContent = contenidoBoton;
+  boton.className = 'btn-descargar-todo-extension w3-btn w3-purple w3-right w3-padding-small'
+  
+  boton.addEventListener('click', async (evento) => {
+    evento.stopPropagation();
+
+    try {
+      activarEsperaBoton(boton,'Descargando...');
+      const resultado = await obtenerTodosLosArchivos(modulos);
+    } catch(error) {
+      console.error("Error al tratar de descargar todo el contenido: ", error, error.message);
+    } finally {
+      desactivarEsperaBoton(boton,contenidoBoton);
+    }
+  })
+
+  div.appendChild(boton);
+}
+
 // Función para crear e inyectar el botón en un módulo específico
 function agregarBotonDescargar(modulo) {
   // Evitamos insertar duplicados si el script corre varias veces
@@ -39,30 +65,54 @@ function agregarBotonDescargar(modulo) {
   modulo.appendChild(boton);
 }
 
+function obtenerEnlaces(modulo, lista, nombreBaseCarpeta) {
+  const moduloAcordeon = modulo.nextElementSibling;
+    
+    const tablasArchivo = moduloAcordeon.querySelectorAll('tbody');
+    tablasArchivo.forEach((tabla, indiceTabla) => {
+      elementoAnterior = tabla.previousElementSibling;
+      // Si es multiple modulos tiene que contener: el "nombre del módulo" "/" "nombre tabla" 
+      nombreCarpeta = nombreBaseCarpeta === 'Base' ? '' : modulo.querySelector("span").textContent.trim() + '/';
+       
+      if(elementoAnterior.matches('thead')) {
+        nombreCarpeta += elementoAnterior.querySelector('th[colspan="2"]').textContent.trim();
+      }
+  
+      tabla.querySelectorAll('tr').forEach(fila => {
+          lista.push([nombreCarpeta, fila.cells[1].textContent.trim(), fila.cells[5].querySelector('a')?.href])
+      })
+    });
+}
+
 // Lógica principal de descarga
-function obtenerArchivos(modulo) {
+function obtenerTodosLosArchivos(modulo) {
+  
   let nombreMateria = document.querySelector("#botonDropdownCurso")?.ariaLabel;
   nombreMateria = nombreMateria.substring(0,nombreMateria.indexOf("(")).trim();
-  let nombreModulo = modulo.querySelector("span").textContent;
-  const nombreArchivo = nombreMateria + "--" + nombreModulo;
+  let nombreBaseCarpeta = '';
+  let nombreArchivo = nombreMateria;
+  // En caso de ser solo un modulo a descargar, debe cambiar el nombre de la carpeta
   
-  const moduloAcordeon = modulo.nextElementSibling;
   const elementosADescargar = []
+
+  modulo.forEach( (mod) => obtenerEnlaces(mod, elementosADescargar, nombreBaseCarpeta))
+
+  return generarZIP(elementosADescargar, nombreArchivo)
+    .then(() => {return {success: true, comment: "Archivos descargados correctamente"}},
+    (err) => {throw {success: false, comment: err}}) ; 
+}
+
+// Lógica principal de descarga
+function obtenerArchivos(modulo) {
   
-  const tablasArchivo = moduloAcordeon.querySelectorAll('tbody');
-  tablasArchivo.forEach((tabla, indiceTabla) => {
-    elementoAnterior = tabla.previousElementSibling;
-    nombreCarpeta = "Base"
-    
-    if(elementoAnterior.matches('thead')) {
-      nombreCarpeta = elementoAnterior.querySelector('th[colspan="2"]').textContent.trim();
-    }
+  let nombreMateria = document.querySelector("#botonDropdownCurso")?.ariaLabel;
+  nombreMateria = nombreMateria.substring(0,nombreMateria.indexOf("(")).trim();
+  let nombreBaseCarpeta = 'Base';
+  let nombreArchivo = nombreMateria + '--' + modulo.querySelector("span").textContent.trim();
+ 
+  const elementosADescargar = []
 
-    tabla.querySelectorAll('tr').forEach(fila => {
-        elementosADescargar.push([nombreCarpeta, fila.cells[1].textContent.trim(), fila.cells[5].querySelector('a')?.href])
-    })
-  });
-
+  obtenerEnlaces(modulo, elementosADescargar, nombreBaseCarpeta)
 
   return generarZIP(elementosADescargar, nombreArchivo)
     .then(() => {return {success: true, comment: "Archivos descargados correctamente"}},
@@ -123,7 +173,9 @@ function descargarArchivoDirecto(blob, nombreArchivo) {
 
 function procesarModulosExistentes() {
   const modulos = document.querySelectorAll('.desplegarModulo');
+  const div = document.querySelector('.w3-clear');
   modulos.forEach(agregarBotonDescargar);
+  agregarBotonDescargarTodo(div,modulos);
 }
 
 // 1. Ejecutar en los elementos ya presentes
