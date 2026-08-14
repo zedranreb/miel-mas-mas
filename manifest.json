@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Miel++",
-  "version": "1.0",
+  "version": "1.2",
   "description": "Agrega un boton de descarga a cada modulo desplegable de la pagina de contenidos de una materia",
   "permissions": ["activeTab"],
   "background": {
