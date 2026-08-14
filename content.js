@@ -4,119 +4,78 @@ zip.configure({
   transferStreams: false
 });
 
-function agregarBotonDescargarTodo(div, modulos) {
-  if (div.querySelector('.btn-descargar-todo-extension')) {
+function crearBoton(plantillaBoton) {
+  let botonACrear         = document.createElement('button');
+  botonACrear.textContent = plantillaBoton.contenido;
+  botonACrear.className   = plantillaBoton.clasePrincipal + ' ' + plantillaBoton.clase;
+
+  return botonACrear;
+}
+
+function agregarBotonUnificado(elementoHTML, parametros) {
+  if (elementoHTML.querySelector('.' + parametros.boton.clasePrincipal)) {
     return;
   }
 
-  const boton = document.createElement('button');
-  const contenidoBoton = 'Descargar todo en zip';
-  boton.textContent = contenidoBoton;
-  boton.className = 'btn-descargar-todo-extension w3-btn w3-purple w3-right w3-padding-small'
+  const boton = crearBoton(parametros.boton);
   
   boton.addEventListener('click', async (evento) => {
     evento.stopPropagation();
 
     try {
       activarEsperaBoton(boton,'Descargando...');
-      const resultado = await obtenerTodosLosArchivos(modulos);
+      const parametrosZIP = obtenerArchivosUnificado(Object.hasOwn(parametros,"modulos") == true ? parametros.modulos : elementoHTML);
+      await generarZIP(parametrosZIP.listaArchivos, parametrosZIP.nombre)
+
     } catch(error) {
       console.error("Error al tratar de descargar todo el contenido: ", error, error.message);
     } finally {
-      desactivarEsperaBoton(boton,contenidoBoton);
+      desactivarEsperaBoton(boton,parametros.boton.contenido);
     }
   })
 
-  div.appendChild(boton);
-}
-
-// Función para crear e inyectar el botón en un módulo específico
-function agregarBotonDescargar(modulo) {
-  // Evitamos insertar duplicados si el script corre varias veces
-  if (modulo.querySelector('.btn-descargar-extension')) {
-    return;
-  }
-
-  const boton = document.createElement('button');
-  const contenidoBoton = 'Descargar zip';
-  boton.textContent = contenidoBoton;
-  boton.className = 'btn-descargar-extension w3-btn w3-orange w3-right w3-padding-small';
-  
-
-  // 2. Manejar el evento de clic
-  boton.addEventListener('click', async (evento) => {
-    // Evitamos que el clic active eventos del div padre (como desplegar/cerrar el módulo)
-    evento.stopPropagation();
-   
-    // Ejecutar lógica de descarga
-    try {
-      
-      activarEsperaBoton(boton, "Descargando...");
-      const resultado = await obtenerArchivos(modulo)
-    
-    } catch(error) {
-       console.error("Error en la descarga de los archivos ", error.message);
-    } finally{
-      desactivarEsperaBoton(boton, contenidoBoton);
-    }
-      
-  });
-
-  modulo.appendChild(boton);
+  elementoHTML.appendChild(boton);
 }
 
 function obtenerEnlaces(modulo, lista, nombreBaseCarpeta) {
   const moduloAcordeon = modulo.nextElementSibling;
     
-    const tablasArchivo = moduloAcordeon.querySelectorAll('tbody');
-    tablasArchivo.forEach((tabla, indiceTabla) => {
-      elementoAnterior = tabla.previousElementSibling;
-      // Si es multiple modulos tiene que contener: el "nombre del módulo" "/" "nombre tabla" 
-      nombreCarpeta = nombreBaseCarpeta === 'Base' ? '' : modulo.querySelector("span").textContent.trim() + '/';
-       
-      if(elementoAnterior.matches('thead')) {
-        nombreCarpeta += elementoAnterior.querySelector('th[colspan="2"]').textContent.trim();
-      }
-  
-      tabla.querySelectorAll('tr').forEach(fila => {
-          lista.push([nombreCarpeta, fila.cells[1].textContent.trim(), fila.cells[5].querySelector('a')?.href])
-      })
-    });
+  const tablasArchivo = moduloAcordeon.querySelectorAll('tbody');
+  tablasArchivo.forEach((tabla, indiceTabla) => {
+    elementoAnterior = tabla.previousElementSibling;
+    
+    // Si es multiple modulos tiene que contener: el "nombre del módulo" "/" "nombre tabla" 
+    nombreCarpeta = nombreBaseCarpeta === 'Base' ? '' : modulo.querySelector("span").textContent.trim() + '/';
+      
+    if(elementoAnterior.matches('thead')) {
+      nombreCarpeta += elementoAnterior.querySelector('th[colspan="2"]').textContent.trim();
+    }
+
+    tabla.querySelectorAll('tr').forEach(fila => {
+        lista.push([nombreCarpeta, fila.cells[1].textContent.trim(), fila.cells[5].querySelector('a')?.href])
+    })
+  });
 }
 
-// Lógica principal de descarga
-function obtenerTodosLosArchivos(modulo) {
+function obtenerArchivosUnificado(elementoHTML) {
   
-  let nombreMateria = document.querySelector("#botonDropdownCurso")?.ariaLabel;
-  nombreMateria = nombreMateria.substring(0,nombreMateria.indexOf("(")).trim();
-  let nombreBaseCarpeta = '';
-  let nombreArchivo = nombreMateria;
-  // En caso de ser solo un modulo a descargar, debe cambiar el nombre de la carpeta
-  
+  let nombreMateria         = document.querySelector("#botonDropdownCurso")?.ariaLabel;
   const elementosADescargar = []
-
-  modulo.forEach( (mod) => obtenerEnlaces(mod, elementosADescargar, nombreBaseCarpeta))
-
-  return generarZIP(elementosADescargar, nombreArchivo)
-    .then(() => {return {success: true, comment: "Archivos descargados correctamente"}},
-    (err) => {throw {success: false, comment: err}}) ; 
-}
-
-// Lógica principal de descarga
-function obtenerArchivos(modulo) {
+  let nombreArchivo         = '';
   
-  let nombreMateria = document.querySelector("#botonDropdownCurso")?.ariaLabel;
-  nombreMateria = nombreMateria.substring(0,nombreMateria.indexOf("(")).trim();
-  let nombreBaseCarpeta = 'Base';
-  let nombreArchivo = nombreMateria + '--' + modulo.querySelector("span").textContent.trim();
- 
-  const elementosADescargar = []
+  nombreMateria     = nombreMateria.substring(0,nombreMateria.indexOf("(")).trim();
+  
+  if(elementoHTML instanceof NodeList) {
+    let nombreBaseCarpeta = '';
+    nombreArchivo         = nombreMateria;
+    elementoHTML.forEach( (modulo) => obtenerEnlaces(modulo, elementosADescargar, nombreBaseCarpeta));
+  } else {
+    let nombreBaseCarpeta = 'Base';
+    nombreArchivo         = nombreMateria + '--' + elementoHTML.querySelector("span").textContent.trim();
+    obtenerEnlaces(elementoHTML, elementosADescargar, nombreBaseCarpeta);
+  }
 
-  obtenerEnlaces(modulo, elementosADescargar, nombreBaseCarpeta)
-
-  return generarZIP(elementosADescargar, nombreArchivo)
-    .then(() => {return {success: true, comment: "Archivos descargados correctamente"}},
-    (err) => {throw {success: false, comment: err}}) ; 
+  return {listaArchivos: elementosADescargar, nombre: nombreArchivo};
 }
 
 async function generarZIP(listaDeElementos, nombreArchivo) {
@@ -126,13 +85,14 @@ async function generarZIP(listaDeElementos, nombreArchivo) {
   payload: listaDeElementos,
   filename: nombreArchivo
 }).then((respuesta) => {
+  
   if (!respuesta || !respuesta.ok) {
     console.error("Error generando ZIP:", respuesta && respuesta.error);
     return;
   }
 
-  // Firefox permite recibir Blob por mensaje (structured clone)
   const blob = respuesta.zip;
+  
   if (!(blob instanceof Blob)) {
     console.error("Respuesta no contiene Blob");
     return;
@@ -147,21 +107,21 @@ async function generarZIP(listaDeElementos, nombreArchivo) {
 }
 
 function activarEsperaBoton(boton, textoDeEspera) {
-  boton.disabled = true;
+  boton.disabled    = true;
   boton.textContent = textoDeEspera;
 }
 
 function desactivarEsperaBoton(boton, textoDeEspera) {
- boton.disabled = false;
- boton.textContent = textoDeEspera; 
+ boton.disabled     = false;
+ boton.textContent  = textoDeEspera; 
 }
 
 // Helper: Descargar un archivo desde una URL
 function descargarArchivoDirecto(blob, nombreArchivo) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = nombreArchivo || "archivos.zip";
+  const url   = URL.createObjectURL(blob);
+  const a     = document.createElement("a");
+  a.href      = url;
+  a.download  = nombreArchivo || "archivos.zip";
   // Forzar click en el DOM de la página
   document.body.appendChild(a);
   a.click();
@@ -172,10 +132,13 @@ function descargarArchivoDirecto(blob, nombreArchivo) {
 // --- INICIALIZACIÓN ---
 
 function procesarModulosExistentes() {
-  const modulos = document.querySelectorAll('.desplegarModulo');
-  const div = document.querySelector('.w3-clear');
-  modulos.forEach(agregarBotonDescargar);
-  agregarBotonDescargarTodo(div,modulos);
+  const modulos           = document.querySelectorAll('.desplegarModulo');
+  const div               = document.querySelector('.w3-clear');
+  const parametrosModulos = {boton: {contenido: "Descargar zip", clasePrincipal: 'btn-descargar-extension', clase: "w3-btn w3-orange w3-right w3-padding-small"}};
+  const parametrosDiv     = {boton: {contenido: "Descargar contenido zip", clasePrincipal: 'btn-descargar-todo-extension', clase: "w3-btn w3-purple w3-right w3-padding-small"}, modulos: modulos};
+  
+  modulos.forEach( (mod) => agregarBotonUnificado(mod, parametrosModulos));
+  agregarBotonUnificado(div,parametrosDiv);  
 }
 
 // 1. Ejecutar en los elementos ya presentes
