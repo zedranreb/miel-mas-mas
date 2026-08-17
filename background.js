@@ -22,16 +22,22 @@ async function prepararZip(request, sender, sendResponse) {
       const zipFile = new zip.ZipWriter(zipFileWriter);
 
       const tareas = lista.map(async (elem) => {
-        const carpeta = limpiarNombre(elem[0]);
-        const nombre = limpiarNombre(elem[1]);
-        const url = elem[2];
+        const carpeta             = limpiarNombre(elem[0]);
+        const nombre              = limpiarNombre(elem[1]);
+        const url                 = elem[2];
+        const regexContenidoMiel  = /https:\/\/miel\.unlam\.edu\.ar\/contenido\/*/
 
-        const resp = await fetch(url);
-        if (!resp.ok) throw new Error("HTTP " + resp.status);
-
-        const blob = await resp.blob();
-        const reader = new zip.BlobReader(blob);
-        const extension = determinarTipoArchivo(blob.type);
+        if(regexContenidoMiel.test(url)){
+          const resp      = await fetch(url);
+          if (!resp.ok) throw new Error("HTTP " + resp.status);
+  
+          var blob      = await resp.blob();
+          var reader    = new zip.BlobReader(blob);
+          var extension = determinarTipoArchivo(blob.type);
+        } else {
+          var reader    = new zip.TextReader(url);
+          var extension = {ext: ".url", compresion: false, ok: true};
+        }
 
         if(!extension.ok) {
           throw Error("Archivo con extension no soportada");
